@@ -1,0 +1,91 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+// Add keystore properties
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def getLocalProperties() {
+    Properties properties = new Properties()
+    if (project.rootProject.file('local.properties').exists()) {
+        properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    }
+    return properties
+}
+
+def flutterVersionName = getLocalProperties().getProperty('flutter.versionName', "1.0.4")
+def flutterVersionCode = getLocalProperties().getProperty('flutter.versionCode', "4")
+
+// Override with Dart define if available
+if (project.hasProperty('dartDefineFlutterVersionName')) {
+    flutterVersionName = project.dartDefineFlutterVersionName
+}
+
+android {
+    namespace "com.pasuper.superdeliver"
+    compileSdk flutter.compileSdkVersion
+    ndkVersion flutter.ndkVersion
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 35
+        multiDexEnabled true
+        applicationId "com.pasuper.superdeliver"
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+
+   signingConfigs {
+    release {
+        keyAlias keystoreProperties['keyAlias']
+        keyPassword keystoreProperties['keyPassword']
+        storeFile file(keystoreProperties['storeFile'])
+        storePassword keystoreProperties['storePassword']
+    }
+}
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+flutter {
+    source '../..'
+}
+
+dependencies {
+     implementation 'androidx.multidex:multidex:2.0.1'
+}
+
